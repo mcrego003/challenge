@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  publicservice:
+    build:
+      context: ./public-service
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats-server:4222
+
+  subscriptionservice:
+    build:
+      context: ./subscription-service
+      dockerfile: Dockerfile
+    depends_on: [nats, mongo]
+    environment:
+      NATS_URL: nats://nats-server:4222
+      SUBSCRIPTION_DB_URL: mongodb://mongo/nest
+
+  emailservice:
+    build:
+      context: ./email-service
+      dockerfile: Dockerfile
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats-server:4222
+
+  nats:
+    image: 'nats'
+    container_name: nats-server
+    expose:
+      - "8222"
+      - "6222"
+      - "4222"
+    ports:
+      - "8222:8222"
+    hostname: nats-server
+
+  mongo:
+    image: 'mongo'
+    container_name: mongo
+    expose:
+      - "27017"
